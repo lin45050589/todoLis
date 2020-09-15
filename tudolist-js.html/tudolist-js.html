@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>ToDoList—最简单的待办事项列表</title>
+    <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+    <header>
+        <section>
+            <label for="title">ToDoList</label>
+            <input type="text" id="title" name="title" placeholder="添加ToDo" required="required" autocomplete="off" />
+        </section>
+    </header>
+    <section>
+        <h2>今日事项 <span id="todocount">0</span></h2>
+        <ol id="todolist" class="demo-box">
+            <!-- 
+            <li>
+                <p>xxxxxxxx</p>
+                <a href="#"></a>
+            </li> 
+        -->
+        </ol>
+    </section>
+    <footer>
+        Copyright &copy; 黑马们~~
+    </footer>
+
+    <script src="DataHelper.js"></script>
+    <script>
+        // 1. 获得需要的元素
+        let userInput = document.getElementById('title');
+        let olBox = document.getElementById('todolist');
+        let todoCount = document.getElementById('todocount');
+
+        // 2. 创建一个数据管理员
+        let helper = new DataHelper('今日事项');
+
+        // 11. 每次打开页面的时候,要调用重载方法
+        reloadData();
+
+        // 3. 给输入框设置键盘事件
+        userInput.onkeydown = function (e) {
+            e = window.event || e;
+            // 4.当用户点击回车的时候执行
+            if (e.keyCode == 13) {
+                // 5. 获得用户输入的信息,去除左右的空格
+                let value = userInput.value.trim();
+
+                // 6. 判断用户输入的是否为空
+                if (value == '') {
+                    return;
+                }
+
+                // 7. 将输入的内容,保存到localStorage中
+                // 调用保存数据函数
+                // 把返回出来的id保存一下
+                let dataID = saveData(value);
+
+                // 8. 调用创建标签方法
+                // value给p标签
+                // dataID给a标签
+                createLi(value,dataID);
+
+                // 9. 清空输入框
+                userInput.value = '';
+
+                // 10. 修改事项的数目
+                todoCount.innerText++;
+            }
+        }
+
+        // 封装声明: 保存数据函数
+        function saveData(text) {
+            // 因为管理员保存的数据格式必须是对象格式
+            // 将文字内容,变成对象格式
+            // let obj = {
+            //     content: text
+            // }
+            // 获取保存方法的返回值
+            let dataObj = helper.addData(
+                {
+                    // 对象中数据格式
+                    // key : value
+                    content: text
+                }
+            )
+
+            // 将a标签需要的id值返回出去
+            return dataObj.id;
+        }
+
+        // 封装声明: 创建li标签函数
+        function createLi(text,id) {
+            // 创建三个空标签
+            let liBox = document.createElement('li');
+            let pBox = document.createElement('p');
+            let aBox = document.createElement('a');
+
+            // 给p标签设置文字内容
+            pBox.innerText = text;
+
+            // 将数据对应的id值,保存到a标签上
+            aBox.setAttribute('index',id);
+            // 给a标签设置点击事件
+            aBox.onclick = removeData;
+
+            // 将元素追加到合适的位置
+            liBox.appendChild(pBox);
+            liBox.appendChild(aBox);
+            olBox.appendChild(liBox);
+        }
+
+        // 封装声明: 删除数据函数
+        function removeData() {
+            // 获得被点击a标签的index值
+            let index = this.getAttribute('index');
+            
+            // 根据index来删除指定数据
+            helper.removeDataById(index);
+
+            // 再删除页面的结构
+            olBox.removeChild(this.parentNode);
+
+             // 修改事项的数目
+             todoCount.innerText--;
+        }
+
+        // 封装声明: 每次重新打开页面,要根据本地数据进行加载
+        function reloadData() {
+            // 先获得本地的数据
+            let localData = helper.readData();
+
+            // 判断数据是否为空
+            if (localData == null) {
+                return;
+            }
+
+            // 根据获得的数组长度来遍历创建
+            for(let i = 0;i < localData.length;i++) {
+                // 循环调用createLi方法
+                // content文字
+                // id序号
+                createLi(localData[i].content,localData[i].id)
+            }
+
+            // 将数组的长度设置给todoCount
+            todoCount.innerText = localData.length;
+        }
+    </script>
+    
+</body>
+
+</html>
